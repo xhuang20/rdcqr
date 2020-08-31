@@ -16,7 +16,7 @@ Maintainer: \packageMaintainer{rdcqr}
 
 \keyword{ rdcqr }
 \seealso{
-Optional links to other man pages, e.g.
-\url{http://www.r-project.org}.
+The package can be found at 
+\url{https://github.com/xhuang20/rdcqr}.
 }
 
