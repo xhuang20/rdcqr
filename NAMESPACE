@@ -1,0 +1,9 @@
+useDynLib(rdcqr, .registration=TRUE)
+importFrom(Rcpp, evalCpp) 
+importFrom(RcppParallel,RcppParallelLibs)
+export("boundary_var",
+       "boundary_bias",
+       "cqrMMcpp",
+       "est_cqr",
+       "rdcqr",
+       "h_cqr")

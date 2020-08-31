@@ -1,0 +1,22 @@
+Package: rdcqr
+Type: Package
+Title: Local Composite Quantile Regression Method for Regression Discontinuity
+Version: 0.0.1
+Date: 2020-08-31
+Author: Xiao Huang
+Maintainer: Xiao Huang <xiao_huang@outlook.com>
+Description: This package computes local composite quantile regression estimator
+    for the treatment effect in both sharp and fuzzy regression discontinuity 
+    designs. It also computes the bias-corrected estimator and adjusts its 
+    standard error by taking into consideration the variability due to bias
+    correction.
+License: GPL-2.0
+Depends: R (>= 2.10)
+Imports: ks (>= 1.11.7), locfit (>= 1.5-9.1), Rcpp (>= 1.0.2), RcppParallel (>= 5.0.2)
+LinkingTo: Rcpp, RcppArmadillo, RcppParallel
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+SystemRequirements: GNU make 
+URL: https://github.com/xhuang20/rdcqr
+BugReports: https://github.com/xhuang20/rdcqr/issues
