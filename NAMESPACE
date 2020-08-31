@@ -5,5 +5,5 @@ export("boundary_var",
        "boundary_bias",
        "cqrMMcpp",
        "est_cqr",
-       "rdcqr",
-       "h_cqr")
+       "h_cqr",
+       "rdcqr")
