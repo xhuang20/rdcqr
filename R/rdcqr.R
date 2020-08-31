@@ -178,13 +178,11 @@ rdcqr <- function(y, x, fuzzy = NULL, t0 = 0, cutoff = 0, q = 5, bandwidth = "ro
     data_n   = subset(data_all, data_all$x < 0 )
     tau      = (1:q)/(q+1)
     n_all    = dim(data_all)[1]
-    # h_f0     = 1.06*stats::sd(x)*n_all^(-0.2)
-    # f0_hat   = sum(exp(-0.5*(x/h_f0)^2)/(sqrt(2*pi)))/(n_all*h_f0)
-    h_d0   = ks::hns(x, deriv.order = 0)
-    fd0    = ks::kdde(x,h = h_d0, deriv.order = 0,eval.points = c(0))$estimate
-    f0_hat = fd0
-    h_d1   = ks::hns(x, deriv.order = 1)
-    fd1    = ks::kdde(x,h = h_d1, deriv.order = 1,eval.points = c(0))$estimate
+    h_d0     = ks::hns(x, deriv.order = 0)
+    fd0      = ks::kdde(x,h = h_d0, deriv.order = 0,eval.points = c(0))$estimate
+    f0_hat   = fd0
+    h_d1     = ks::hns(x, deriv.order = 1)
+    fd1      = ks::kdde(x,h = h_d1, deriv.order = 1,eval.points = c(0))$estimate
     
     p     = 1
     dat_n = list("x"      = as.matrix(data_n$x),
