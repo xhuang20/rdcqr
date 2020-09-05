@@ -55,7 +55,7 @@
 #'@export
 #'
 #'@usage h_cqr(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para = 1,
-#'  grainsize = 1, llr.residuals = FALSE, ls.derivative = FALSE)
+#'  grainsize = 1, llr.residuals = FALSE, ls.derivative = TRUE)
 #'
 #'@examples
 #' \dontrun{
@@ -92,7 +92,7 @@
 #'Regression Discontinuity," working paper.}
 #'
 #'}
-h_cqr <- function(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = FALSE, ls.derivative = FALSE){
+h_cqr <- function(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = FALSE, ls.derivative = TRUE){
   
   n   = length(dat$y)
   x   = dat$x
@@ -201,9 +201,13 @@ h_cqr <- function(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para =
   if(ls.derivative){
     est_ls  = stats::lm(y ~ I(x) + I(x^2) + I(x^3) + I(x^4))
     md2     = est_ls$coefficients[3][[1]] * 2
+    est_ls  = stats::lm(y ~ I(x) + I(x^2) + I(x^3) + I(x^4) + I(x^5))
+    md3     = est_ls$coefficients[4][[1]] * 6
   }else{
     est_cqr = cqrMMcpp(x0 = 0, x, y, kernID = kernID, tau, h = h, p = 2, maxit = maxit, tol = tol)
     md2     = est_cqr$beta1[2]*2
+    est_cqr = cqrMMcpp(x0 = 0, x, y, kernID = kernID, tau, h = h, p = 3, maxit = maxit, tol = tol)
+    md3     = est_cqr$beta1[3]*6
   }
   
   ac = (mu2^2 - mu1*mu3)/(mu0*mu2 - mu1^2)
@@ -245,7 +249,8 @@ h_cqr <- function(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para =
   v2 = var_bias * n_all * h
   v3 = var_cov * n_all * h
   B  = v1 + v2 - 2 * v3
-  A  = 0.5 * a2c * fd1 / f0_hat * md2
+  a3c = (mu2 * mu3 - mu1 * mu4) / (mu0 * mu2 - mu1^2)
+  A  = 0.5 * a2c * fd1 / f0_hat * md2 + a3c * md3 / 6
   A2 = A^2
   h_opt = (B/6/A2)^(1/7)*(n_all)^(-1/7)
   h_mse = (sig0_hat^2 * bY / (ac^2 * md2^2 * f0_hat))^(0.2) * n_all^(-0.2)

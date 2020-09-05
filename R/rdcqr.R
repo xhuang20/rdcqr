@@ -54,8 +54,9 @@
 #'   option will improve the speed but its accuracy is unclear. One can use this
 #'   opition to get a quick estimate of the standard errors when the sample size
 #'   is large.
-#' @param ls.derivative Whether to use a global quartic polynomial to estimate
-#'   the second derivative of the conditional mean function. Defaults to FALSE.
+#' @param ls.derivative Whether to use a global quartic and quintic polynomial
+#'   to estimate the second and third derivatives of the conditional mean
+#'   function. Defaults to TRUE.
 #'
 #' @details This is the main function of the package and it estimates the
 #'   treatment effect for both sharp and fuzzy RD designs. The LCQR estimate is
@@ -81,14 +82,13 @@
 #'   settings during estimation.
 #'
 #'   In estimating the bandwidths \code{adj.mseone}, \code{adj.msetwo}, and
-#'   \code{msetwo}, we need an estimate for the second derivative of the
-#'   conditional mean function. By default, the second derivative is estimated
-#'   based on a quadratic polynomical in LCQR. The option \code{ls.derivative},
-#'   when set to \code{TRUE}, estimates the second derivative using a simple,
-#'   global quartic polynomial at the boundary point. Sometimes it can be
-#'   difficult for a nonparametric method such as LCQR to estimate the second
-#'   derivative accurately, and this option provides an alternative way for
-#'   estimation.
+#'   \code{msetwo}, we need an estimate for the second and third derivative of
+#'   the conditional mean function. By default, the second derivative is
+#'   estimated by a global quartic polynomial and the third derivative is
+#'   estimated by a global quintic polynomial. The option \code{ls.derivative},
+#'   when set to \code{FLASE}, uses the LCQR method for derivative
+#'   estimation.Sometimes it can be difficult for a nonparametric method such as
+#'   LCQR to estimate derivatives of higher order.
 #'
 #' @return \code{rdcqr} returns a list with the following components:
 #'   \item{estimate}{Treatment effect estimate and the bias-corrected treatment
@@ -107,7 +107,7 @@
 #' @usage rdcqr(y, x, fuzzy = NULL, t0 = 0, cutoff = 0, q = 5, bandwidth =
 #'   "rot", kernel.type = "triangular", maxit = 20, tol = 1.0e-3, parallel =
 #'   TRUE, numThreads = "default", grainsize = 1, llr.residuals = FALSE,
-#'   ls.derivative = FALSE)
+#'   ls.derivative = TRUE)
 #'
 #' @examples
 #' \dontrun{
@@ -137,7 +137,7 @@
 rdcqr <- function(y, x, fuzzy = NULL, t0 = 0, cutoff = 0, q = 5, bandwidth = "rot", 
                   kernel.type = "triangular", maxit = 20, tol = 1.0e-3, 
                   parallel = TRUE, numThreads = "default", grainsize = 1,
-                  llr.residuals = FALSE, ls.derivative = FALSE){
+                  llr.residuals = FALSE, ls.derivative = TRUE){
   
   switch(kernel.type,
          triangular   = {kernID = 0},

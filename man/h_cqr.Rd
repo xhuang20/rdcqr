@@ -5,7 +5,7 @@
 \title{Bandwidth computation}
 \usage{
 h_cqr(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para = 1,
- grainsize = 1, llr.residuals = FALSE, ls.derivative = FALSE)
+ grainsize = 1, llr.residuals = FALSE, ls.derivative = TRUE)
 }
 \arguments{
 \item{dat}{A list with the following components: \describe{ \item{y}{A vector
