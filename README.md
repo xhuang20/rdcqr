@@ -40,5 +40,5 @@ rdcqr(y, x, llr.residuals = TRUE)
 
 # Example 2
 # Use residuals from a local composite regression to compute the standard errors.
-rdcqr(y, x)
+rdcqr(y, x, llr.residuals = FALSE)
 ```

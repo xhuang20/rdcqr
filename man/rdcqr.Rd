@@ -6,7 +6,7 @@
 \usage{
 rdcqr(y, x, fuzzy = NULL, t0 = 0, cutoff = 0, q = 5, bandwidth =
   "rot", kernel.type = "triangular", maxit = 20, tol = 1.0e-3, parallel =
-  TRUE, numThreads = "default", grainsize = 1, llr.residuals = FALSE,
+  TRUE, numThreads = "default", grainsize = 1, llr.residuals = TRUE,
   ls.derivative = TRUE)
 }
 \arguments{
@@ -57,24 +57,25 @@ estimation. Defaults to 20.}
 Defaults to  \code{TRUE}.}
 
 \item{numThreads}{Number of threads used in parallel computation. The option
-\code{auto} uses all threads. Defaults to the number of cores minus 1.}
+\code{auto} uses all threads and the option \code{default} uses the number
+of cores minus 1. Defaults to \code{numThreads = "default"}.}
 
 \item{grainsize}{Minimum chunk size for parallelization. Defaults to 1.}
 
 \item{llr.residuals}{Whether to use residuals from the local linear
 regression as the input to compute the LCQR standard errors and the
-corresponding bandwidths. Defaults to \code{FALSE}. If this option is set
-to \code{TRUE}, the treatment estimate and the bias-correction is still
+corresponding bandwidths. Defaults to \code{TRUE}. If this option is set to
+\code{TRUE}, the treatment effect estimate and the bias-correction is still
 done in LCQR. We use the same kernel function used in LCQR in the local
 linear regression to obtain the residuals and use them to compute the
 unadjusted and adjusted asymptotic standard errors and the bandwidths. This
-option will improve the speed but its accuracy is unclear. One can use this
-opition to get a quick estimate of the standard errors when the sample size
-is large.}
+option will improve the speed. One can use this option to get a quick
+estimate of the standard errors when the sample size is large. To use
+residuals from the LCQR method, set \code{llr.residuals = FALSE}.}
 
 \item{ls.derivative}{Whether to use a global quartic and quintic polynomial
 to estimate the second and third derivatives of the conditional mean
-function. Defaults to TRUE.}
+function. Defaults to \code{TRUE}.}
 }
 \value{
 \code{rdcqr} returns a list with the following components:
@@ -92,25 +93,26 @@ test.}
 \description{
 This function computes the local composite quantile regression
 (LCQR) estimator of treatment effect for both sharp and fuzzy regression
-discontinuity (RD) designs. It also computes the bias- corrected estimator
+discontinuity (RD) designs. It also computes the bias-corrected estimator
 and adjusts its standard error by incorporating the variability due to
 bias-correction.
 }
 \details{
 This is the main function of the package and it estimates the
 treatment effect for both sharp and fuzzy RD designs. The LCQR estimate is
-obtained from an iterative algorithm and the estimation speed is much
-slower compared to that of the lcoal linear regression. Most computation
-time is spend on the calculation of the standard errors. By default, the
-code to compute the standard error and bandwidth is paralleled and the
-argument \code{numThreads} is set to the number of physical cores on a
-computer. The option \code{numThreads = "auto"} uses all available threads
-on a computer.
+obtained from an iterative algorithm and the estimation speed is slow
+compared to that of the local linear regression. Most computation time is
+spend on the calculation of the standard errors. If residuals from LCQR are
+used, i.e., \code{llr.residuals = FALSE}, the code to compute the standard
+error and bandwidth is paralleled and the argument \code{numThreads} is set
+to the number of physical cores minus one by default. The options
+\code{parallel}, \code{numThreads}, and \code{grainsize} are relevant when
+\code{llr.residuals = FALSE}.
 
-To further speed up things, the option \code{llr.residuals = TRUE}. This is
-particularly suitable when the sample size is large.
+To further speed up computation, use the option \code{llr.residuals =
+  TRUE}. This is particularly suitable when the sample size is large.
 
-The two arguments \code{maxit} and \code{tol} have a large impact on the
+The two arguments \code{maxit} and \code{tol} have an impact on the
 computation speed. For example, using \code{maxit = 500} and \code{tol =
   1e-6} will take much longer to complete compared to the default setting,
 though the results are more precise. Our limited experience with some of
@@ -125,9 +127,10 @@ In estimating the bandwidths \code{adj.mseone}, \code{adj.msetwo}, and
 the conditional mean function. By default, the second derivative is
 estimated by a global quartic polynomial and the third derivative is
 estimated by a global quintic polynomial. The option \code{ls.derivative},
-when set to \code{FLASE}, uses the LCQR method for derivative
-estimation.Sometimes it can be difficult for a nonparametric method such as
-LCQR to estimate derivatives of higher order.
+when set to \code{FLASE}, uses the LCQR method for derivative estimation.
+Sometimes it can be difficult for a nonparametric method such as LCQR to
+estimate derivatives of higher order, which is also true for local linear
+regression.
 }
 \examples{
 \dontrun{
@@ -142,16 +145,15 @@ x = headstart$poverty
 rdcqr(y, x, bandwidth = "rot", llr.residuals = TRUE)
 
 # Supply bandwidths to data below and above the cutoff 0.
-# The \code{poverty} variable is preprocessed to have a cutoff equal to 0.
+# The poverty (x) variable is preprocessed to have a cutoff equal to 0.
 rdcqr(y, x, bandwidth = c(10, 3), llr.residuals = TRUE)
 
 # Try the MSE-optimal bandwidths for data below and above the cutoff.
 rdcqr(y, x, bandwidth = "msetwo", llr.residuals = TRUE)
 
-# Use the default settings.
-# This approach uses residuals from a LCQR estimation when computing the
-# standard errors. It is slow for large data sets. By default, the option
-\code{parallel = TRUE} is used.
-rdcqr(y, x)
+# Use residuals from a LCQR estimation when computing the standardd errors
+# It is slow for large data sets but can be more accurate. By default, the option
+# parallel = TRUE is used.
+rdcqr(y, x, llr.residuals = FALSE)
 }
 }

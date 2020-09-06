@@ -13,10 +13,11 @@ boundary_bias(x0 = 0, dat, kernID = 0, left = TRUE, maxit = 20, tol =
 \item{dat}{A list with the following components: \describe{ \item{y}{A vector
 treatment outcomes. In a fuzzy RD, this variable can also be a vector of
 treatment assignment variables.} \item{x}{A vector of covariates.}
-\item{h}{A scalar bandwidth.} \item{p}{The polynomial degree. Set it to 2
+\item{h}{A scalar bandwidth.} \item{p}{The polynomial degree. p = 2 is used
 to estimate the second derivative of the conditional mean function for bias
-estimation.} \item{q}{Number of quantiles used in estimation. It needs to
-be an odd integer such as 5 or 9.} }}
+estimation. LCQR is used to estimate the second derivative.}
+\item{q}{Number of quantiles used in estimation. It needs to be an odd
+integer such as 5 or 9.} }}
 
 \item{kernID}{Kernel id number. \enumerate{ \item \code{kernID = 0}:
 triangular kernel. \item \code{kernID = 1}: biweight kernel. \item

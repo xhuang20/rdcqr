@@ -59,10 +59,12 @@
 #  the null-restricted hypothesis testing.}
 #
 #@usage boundary_var_fuzzy(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20,
-#  tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = FALSE)
+#  tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = TRUE,
+#  ls.derivative = TRUE)
 
 boundary_var_fuzzy <- function(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20, 
-                               tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = FALSE){
+                               tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = TRUE,
+                               ls.derivative = TRUE){
  
   mu0 = kmoments(kernID = kernID, left = left)$mu0
   mu1 = kmoments(kernID = kernID, left = left)$mu1
@@ -95,9 +97,6 @@ boundary_var_fuzzy <- function(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20,
   n_all = dat$n_all
   f0_hat = dat$f0_hat
   fd1 = dat$fd1
-  
-  # Var(Y_tilde - Bias_Y_tilde) = Var(Y_tilde) + Var(Bias) - 2*cov(Y_tilde, Bias)
-  # Compute Var(Y_tilde).
   
   # Construct dat_y and dat_t
   dat_y = list("x" = as.matrix(x),

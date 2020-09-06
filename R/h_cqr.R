@@ -6,14 +6,15 @@
 #'@param dat A list with the following components: \describe{ \item{y}{A vector
 #'  treatment outcomes. In a fuzzy RD, this variable can also be a vector of
 #'  treatment assignment variables.} \item{x}{A vector of covariates.}
-#'  \item{q}{Number of quantiles to be used in estimation. Defaults to 5. It has
-#'  to be an odd number.} \item{h}{A scalar bandwidth.} \item{tau}{Quantile
-#'  positions that correspond to the q quantiles. They are obtained by \code{tau
-#'  = (1:q)/(q+1)}.} \item{p}{The degree of polynomial in LCQR estimation. Set
-#'  it to 1 when estimating the residuals.} \item{n_all}{Total number of
-#'  observations in the data set.} \item{f0_hat}{Estimated density of the
-#'  covariate at x = 0.} \item{fd1}{Estimated first derivative of the density of
-#'  the covariate at x = 0.} }
+#'  \item{q}{Number of quantiles to be used in estimation. Defaults to 5. It
+#'  needs to be an odd number.} \item{h}{A scalar bandwidth.}
+#'  \item{tau}{Quantile positions that correspond to the q quantiles. They are
+#'  obtained by \code{tau = (1:q)/(q+1)}.} \item{p}{The degree of polynomial in
+#'  LCQR estimation. Set it to 1 when estimating the residuals.}
+#'  \item{n_all}{Total number of observations in the data set.}
+#'  \item{f0_hat}{Estimated density of the covariate at x = 0.}
+#'  \item{fd1}{Estimated first derivative of the density of the covariate at x =
+#'  0.} }
 #'@param kernID Kernel id number. Defaults to 0. \enumerate{ \item \code{kernID
 #'  = 0}: triangular kernel. \item \code{kernID = 1}:   biweight kernel. \item
 #'  \code{kernID = 2}:  Epanechnikov kernel. \item \code{kernID = 3}:  Gaussian
@@ -27,35 +28,37 @@
 #'@param para A 0/1 variable specifying whether to use parallel computing.
 #'  Defaults to 1.
 #'@param grainsize Minimum chunk size for parallelization. Defaults to 1.
-#'@param llr.residuals Whether to use the residuals from a local linear
-#'  regression as the input to compute the LCQR standard errors and the
-#'  corresponding bandwidths. Defaults to \code{FALSE}. If this option is set to
-#'  \code{TRUE}, the treatment estimate and the bias-correction is still done in
-#'  LCQR. We use the same kernel function used in LCQR in the local linear
-#'  regression to obtain the residuals and use them to compute the unadjusted
-#'  and adjusted asymptotic standard errors and the bandwidths. This option will
-#'  improve the speed but its accuracy is unclear. One can use this option to
-#'  get a quick estimate of the standard errors when the sample size is large.
-#'@param ls.derivative Whether to use a global quartic polynomial to estimate
-#'  the second derivative of the conditional mean function. Defaults to FALSE.
+#'@param llr.residuals Whether to use residuals from the local linear regression
+#'  as the input to compute the LCQR standard errors and the corresponding
+#'  bandwidths. Defaults to \code{TRUE}. If this option is set to \code{TRUE},
+#'  the treatment effect estimate and the bias-correction is still done in LCQR.
+#'  We use the same kernel function used in LCQR in the local linear regression
+#'  to obtain the residuals and use them to compute the unadjusted and adjusted
+#'  asymptotic standard errors and the bandwidths. This option will improve the
+#'  speed. One can use this option to get a quick estimate of the standard
+#'  errors when the sample size is large. To use residuals from the LCQR method,
+#'  set \code{llr.residuals = FALSE}.
+#'@param ls.derivative Whether to use a global quartic and quintic polynomial to
+#'  estimate the second and third derivatives of the conditional mean function.
+#'  Defaults to \code{TRUE}.
 #'
 #'@return \code{h_cqr} returns a list with the following components:
 #'  \item{h_mse}{MSE-optimal bandwidth on the boundary. This bandwidth has order
-#'  \eqn{O(n^{-1/5}}, where n is the sample size for data either below or above
+#'  \eqn{O(n^{-1/5})}, where n is the sample size for data either below or above
 #'  the cutoff.} \item{h_opt}{Bandwidth based on the adjusted MSE on the
 #'  boundary. See Huang and Zhan (2020) for details about the adjusted MSE. This
-#'  bandwidth has order \eqn{O(n^{-1/7}}, where n is the sample size for data
-#'  eigher below or above the cutoff.} \item{h_rot}{A transform of the
+#'  bandwidth has order \eqn{O(n^{-1/7})}, where n is the sample size for data
+#'  either below or above the cutoff.} \item{h_rot}{A transform of the
 #'  rule-of-thumb bandwidth for the local linear regression. The rule-of-thumb
 #'  bandwidth is close to the Mean Integrated Squared Error optimal
 #'  (MISE-optimal) bandwidth in a local linear regression. This bandwidth has
-#'  order \eqn{O(n^{-1/5}}, where n is the sample size for data either below or
+#'  order \eqn{O(n^{-1/5})}, where n is the sample size for data either below or
 #'  above the cutoff.}
 #'
 #'@export
 #'
 #'@usage h_cqr(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para = 1,
-#'  grainsize = 1, llr.residuals = FALSE, ls.derivative = TRUE)
+#'  grainsize = 1, llr.residuals = TRUE, ls.derivative = TRUE)
 #'
 #'@examples
 #' \dontrun{
@@ -65,6 +68,7 @@
 #' p = 1
 #' q = 5
 #' tau = (1:q) / (q + 1)
+#' x = headstart$poverty
 #' h_d0   = ks::hns(x, deriv.order = 0)
 #' f0_hat = ks::kdde(x, h = h_d0, deriv.order = 0, eval.points = c(0))$estimate
 #' h_d1   = ks::hns(x, deriv.order = 1)
@@ -92,7 +96,7 @@
 #'Regression Discontinuity," working paper.}
 #'
 #'}
-h_cqr <- function(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = FALSE, ls.derivative = TRUE){
+h_cqr <- function(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = TRUE, ls.derivative = TRUE){
   
   n   = length(dat$y)
   x   = dat$x

@@ -5,7 +5,7 @@
 \title{Variance on the boundary}
 \usage{
 boundary_var(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3,
- para = 1, grainsize = 1, llr.residuals = FALSE)
+ para = 1, grainsize = 1, llr.residuals = TRUE)
 }
 \arguments{
 \item{dat}{A list with the following components: \describe{ \item{y}{A vector
@@ -40,15 +40,16 @@ Defaults to 1.}
 
 \item{grainsize}{Minimum chunk size for parallelization. Defaults to 1.}
 
-\item{llr.residuals}{Whether to use the residuals from a local linear
+\item{llr.residuals}{Whether to use residuals from the local linear
 regression as the input to compute the LCQR standard errors and the
-corresponding bandwidths. Defaults to \code{FALSE}. If this option is set to
-\code{TRUE}, the treatment estimate and the bias-correction is still done in
-LCQR. We use the same kernel function used in LCQR in the local linear
+corresponding bandwidths. Defaults to \code{TRUE}. If this option is set to
+\code{TRUE}, the treatment effect estimate and the bias-correction is still done
+in LCQR. We use the same kernel function used in LCQR in the local linear
 regression to obtain the residuals and use them to compute the unadjusted
-and adjusted asymptotic standard errors and the bandwidths. This option will
-improve the speed but its accuracy is unclear. One can use this option to
-get a quick estimate of the standard errors when the sample size is large.}
+and adjusted asymptotic standard errors and the bandwidths. This option
+will improve the speed. One can use this opition to get a quick estimate of
+the standard errors when the sample size is large. To use residuals from
+the LCQR method, set \code{llr.residuals = FALSE}.}
 }
 \value{
 \code{boundary_var} returns a list with the following components:
