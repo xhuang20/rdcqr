@@ -178,7 +178,13 @@ boundary_var_fuzzy <- function(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20,
   sg21_1 = t(sg12_1)
   vu_vec = c(vu1,vu2,vu3,vu4,vu5,vu6)
   sg22_1 = sum(phi_mat)*cbind(vu_vec[2:(p+1)], vu_vec[3:(p+2)], vu_vec[4:(p+3)])[,1:p]
-  sg_1   = rbind(cbind(sg11_1,sg12_1), cbind(sg21_1,sg22_1))
+  
+  if(q == 1){
+    sg_1 = rbind(c(sg11_1, sg12_1), cbind(t(sg21_1), sg22_1))
+  }else{
+    sg_1 = rbind(cbind(sg11_1,sg12_1), cbind(sg21_1,sg22_1))
+  }
+  
   sand   = solve(ss_1_Y) %*% sg_1 %*% solve(ss_1_T)
   e_2    = matrix(0,nrow = p, ncol = 1)
   e_2[2] = 1

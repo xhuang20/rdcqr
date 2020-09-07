@@ -181,7 +181,11 @@ h_cqr <- function(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para =
   }
   
   p = 1   # Set p = 1 when calculating var0.
-  s11_0  = diag(c(f_e))*mu0
+  if(q == 1){
+    s11_0 = diag(f_e) * mu0
+  }else{
+    s11_0 = diag(c(f_e))*mu0
+  }
   s12_0  = cbind(f_e*mu1,f_e*mu2,f_e*mu3)[,1:p]
   s21_0  = t(s12_0)
   mu_vec = c(mu1,mu2,mu3,mu4,mu5,mu6)
@@ -222,19 +226,32 @@ h_cqr <- function(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para =
   a2c = (mu2^2 - mu1*mu4)/(mu0*mu2 - mu1^2)
   
   p = 2   # Set p = 2 when calculating var_adj.
-  s11_1  = diag(c(f_e))*mu0
+  if(q == 1){
+    s11_1 = diag(f_e) * mu0
+  }else{
+    s11_1  = diag(c(f_e))*mu0
+  }
+  #s11_1  = diag(c(f_e))*mu0
   s12_1  = cbind(f_e*mu1,f_e*mu2,f_e*mu3)[,1:p]
   s21_1  = t(s12_1)
   mu_vec = c(mu1,mu2,mu3,mu4,mu5,mu6)
   s22_1  = sum(f_e)*cbind(mu_vec[2:(p+1)], mu_vec[3:(p+2)], mu_vec[4:(p+3)])[,1:p]
-  ss_1   = rbind(cbind(s11_1,s12_1),cbind(s21_1,s22_1))
+  if(q == 1){
+    ss_1 = rbind(c(s11_1,s12_1), cbind(t(s21_1), s22_1))
+  }else{
+    ss_1   = rbind(cbind(s11_1,s12_1),cbind(s21_1,s22_1))
+  }
   
   sg11_1 = tau_mat * vu0
   sg12_1 = cbind(rowSums(tau_mat)*vu1, rowSums(tau_mat)*vu2, rowSums(tau_mat)*vu3)[,1:p]
   sg21_1 = t(sg12_1)
   vu_vec = c(vu1,vu2,vu3,vu4,vu5,vu6)
   sg22_1 = sum(tau_mat)*cbind(vu_vec[2:(p+1)], vu_vec[3:(p+2)], vu_vec[4:(p+3)])[,1:p]
-  sg_1   = rbind(cbind(sg11_1,sg12_1), cbind(sg21_1,sg22_1))
+  if(q == 1){
+    sg_1 = rbind(c(sg11_1, sg12_1), cbind(t(sg21_1), sg22_1))
+  }else{
+    sg_1 = rbind(cbind(sg11_1,sg12_1), cbind(sg21_1,sg22_1))
+  }
   eq     = matrix(1,nrow = q,ncol = 1)
   
   sand_1 = solve(ss_1) %*% sg_1 %*% solve(ss_1)
