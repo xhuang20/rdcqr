@@ -24,8 +24,8 @@
 #@param left A logical variable that takes the value \code{TRUE} for data to
 #  the left of (below) the cutoff. Defaults to \code{TRUE}.
 #@param maxit maximum iteration number in the MM algorithm for quantile
-#  estimation. Defaults to 20.
-#@param tol  Convergence criterion in the MM algorithm. Defaults to 1.0e-3.
+#  estimation. Defaults to 100.
+#@param tol  Convergence criterion in the MM algorithm. Defaults to 1.0e-4.
 #@param para A 0/1 variable specifying whether to use parallel computing.
 #  Defaults to 1.
 #@param grainsize Minimum chunk size for parallelization. Defaults to 1.
@@ -58,45 +58,36 @@
 #  null-restricted hypothesis testing.} \item{nr_var_adj}{Adjusted variance in
 #  the null-restricted hypothesis testing.}
 #
-#@usage boundary_var_fuzzy(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20,
-#  tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = TRUE,
+#@usage boundary_var_fuzzy(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 100,
+#  tol = 1.0e-4, para = 1, grainsize = 1, llr.residuals = TRUE,
 #  ls.derivative = TRUE)
 
-boundary_var_fuzzy <- function(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20, 
-                               tol = 1.0e-3, para = 1, grainsize = 1, llr.residuals = TRUE,
+boundary_var_fuzzy <- function(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 100, 
+                               tol = 1.0e-4, para = 1, grainsize = 1, llr.residuals = TRUE,
                                ls.derivative = TRUE){
- 
-  mu0 = kmoments(kernID = kernID, left = left)$mu0
-  mu1 = kmoments(kernID = kernID, left = left)$mu1
-  mu2 = kmoments(kernID = kernID, left = left)$mu2
-  mu3 = kmoments(kernID = kernID, left = left)$mu3
-  mu4 = kmoments(kernID = kernID, left = left)$mu4
-  mu5 = kmoments(kernID = kernID, left = left)$mu5
-  mu6 = kmoments(kernID = kernID, left = left)$mu6
-  mu7 = kmoments(kernID = kernID, left = left)$mu7
-  mu8 = kmoments(kernID = kernID, left = left)$mu8
-  vu0 = kmoments(kernID = kernID, left = left)$vu0
-  vu1 = kmoments(kernID = kernID, left = left)$vu1
-  vu2 = kmoments(kernID = kernID, left = left)$vu2
-  vu3 = kmoments(kernID = kernID, left = left)$vu3
-  vu4 = kmoments(kernID = kernID, left = left)$vu4
-  vu5 = kmoments(kernID = kernID, left = left)$vu5
-  vu6 = kmoments(kernID = kernID, left = left)$vu6
-  vu7 = kmoments(kernID = kernID, left = left)$vu7
-  vu8 = kmoments(kernID = kernID, left = left)$vu8
   
   n   = dim(dat$y)[1]
   x   = dat$x
   y   = dat$y
   z   = dat$z    
   tau = dat$tau
-  h_y   = dat$h_y
-  h_t   = dat$h_z   # t = z
+  h_y = dat$h_y
+  h_t = dat$h_z   # t = z
   p   = dat$p
   q   = dat$q
   n_all = dat$n_all
   f0_hat = dat$f0_hat
   fd1 = dat$fd1
+  
+  vu0 = kmoments_yt(kernID = kernID, left = left, h_y = h_y, h_t = h_t)$vu0
+  vu1 = kmoments_yt(kernID = kernID, left = left, h_y = h_y, h_t = h_t)$vu1
+  vu2 = kmoments_yt(kernID = kernID, left = left, h_y = h_y, h_t = h_t)$vu2
+  vu3 = kmoments_yt(kernID = kernID, left = left, h_y = h_y, h_t = h_t)$vu3
+  vu4 = kmoments_yt(kernID = kernID, left = left, h_y = h_y, h_t = h_t)$vu4
+  vu5 = kmoments_yt(kernID = kernID, left = left, h_y = h_y, h_t = h_t)$vu5
+  vu6 = kmoments_yt(kernID = kernID, left = left, h_y = h_y, h_t = h_t)$vu6
+  vu7 = kmoments_yt(kernID = kernID, left = left, h_y = h_y, h_t = h_t)$vu7
+  vu8 = kmoments_yt(kernID = kernID, left = left, h_y = h_y, h_t = h_t)$vu8
   
   # Construct dat_y and dat_t
   dat_y = list("x" = as.matrix(x),
@@ -143,19 +134,13 @@ boundary_var_fuzzy <- function(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20,
   phi_mat = matrix(0,nrow = q, ncol = q)
   for(i in 1:q) {
     for (j in 1:q) {
-      e1    = c(e_yt_hat[,1], c_k_y[i])
-      e2    = c(e_yt_hat[,2], c_k_y[j])
-      ecdf1 = stats::ecdf(e1)
-      ecdf2 = stats::ecdf(e2)
-      inte1 = utils::tail(ecdf1(e1), 1)
-      inte2 = utils::tail(ecdf2(e2), 1)
-      phi_mat[i,j] = mean(inte1*inte2) - tau[i]*tau[j] 
+      phi_mat[i,j] = mean(e_yt_hat[,1] < c_k_y[i] & e_yt_hat[,2] < c_k_t[j]) - tau[i]*tau[j] 
     }
   }
   
   sg11  = phi_mat * vu0
-  sg12  = as.matrix(rowSums(phi_mat)) * vu1
-  sg21  = t(sg12)
+  sg12  = as.matrix(rowSums(phi_mat)) * vu1 * h_y / h_t # The vu term for 12 block has an extra term h_y/h_t.
+  sg21  = t(colSums(phi_mat)) * vu1
   sg22  = sum(phi_mat) * vu2
   sg_yt = rbind(cbind(sg11,sg12), cbind(sg21,sg22))
   byt   = t(eq) %*% (solve(ss_0_y) %*% sg_yt %*% solve(ss_0_t))[1:q,1:q] %*% eq / q^2
@@ -173,9 +158,9 @@ boundary_var_fuzzy <- function(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20,
   
   # Reconstruct Sigma_YT matrix with p = 2.
   p = 2
-  sg11_1 = phi_mat * vu0
-  sg12_1 = cbind(rowSums(phi_mat)*vu1, rowSums(phi_mat)*vu2, rowSums(phi_mat)*vu3)[,1:p]
-  sg21_1 = t(sg12_1)
+  sg11_1 = phi_mat * vu0 
+  sg12_1 = cbind(rowSums(phi_mat)*vu1, rowSums(phi_mat)*vu2, rowSums(phi_mat)*vu3)[,1:p] * h_y / h_t
+  sg21_1 = t(cbind(colSums(phi_mat)*vu1, colSums(phi_mat)*vu2, colSums(phi_mat)*vu3)[,1:p])
   vu_vec = c(vu1,vu2,vu3,vu4,vu5,vu6)
   sg22_1 = sum(phi_mat)*cbind(vu_vec[2:(p+1)], vu_vec[3:(p+2)], vu_vec[4:(p+3)])[,1:p]
   
@@ -212,6 +197,109 @@ boundary_var_fuzzy <- function(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20,
   nr_var_adj = var_Y_tilde + var_bias - 2*cov_Y_tilde_bias
   nr_var0 = var_Y_tilde
   
+  # Add the fixed-n results, starting from line 126 "ss_0_y."
+  ss_0_y_fn = var_mY$ss_0_fixedn
+  ss_0_t_fn = var_mT$ss_0_fixedn
+  ss_1_y_fn = var_mY$ss_1_fixedn
+  ss_1_t_fn = var_mT$ss_1_fixedn
+  
+  # Compute cov_mymt_fn.
+  x0    = 0
+  u0_y  = (x - x0)/h_y
+  w0_y  = kernel_fun(u0_y,kernID = kernID)
+  u0_t  = (x - x0)/h_t
+  w0_t  = kernel_fun(u0_t,kernID = kernID)
+  mkykt = sum(w0_y * w0_t) / (n * sqrt(h_y * h_t))
+  mkyktx = sum(w0_y * w0_t * u0_t) / (n * sqrt(h_y * h_t))
+  mkyktx2 = sum(w0_y * w0_t * u0_t^2) / (n * sqrt(h_y * h_t))
+  mkyktx3 = sum(w0_y * w0_t * u0_t^3) / (n * sqrt(h_y * h_t))
+  mkyxkt = sum(w0_y * w0_t * u0_y) / (n * sqrt(h_y * h_t))
+  mkyx2kt = sum(w0_y * w0_t * u0_y^2) / (n * sqrt(h_y * h_t))
+  mkyx3kt = sum(w0_y * w0_t * u0_y^3) / (n * sqrt(h_y * h_t))
+  mkyxktx = sum(w0_y * w0_t * u0_y * u0_t) / (n * sqrt(h_y * h_t))
+  mkyxktx2 = sum(w0_y * w0_t * u0_y * u0_t^2) / (n * sqrt(h_y * h_t))
+  mkyx2ktx = sum(w0_y * w0_t * u0_y^2 * u0_t) / (n * sqrt(h_y * h_t))
+  mkyx2ktx2 = sum(w0_y * w0_t * u0_y^2 * u0_t^2) / (n * sqrt(h_y * h_t))
+  
+  sg11_fn = phi_mat * mkykt
+  sg12_fn = as.matrix(rowSums(phi_mat)) * mkyktx
+  sg21_fn = t(as.matrix(colSums(phi_mat))) * mkyxkt
+  sg22_fn = sum(phi_mat) * mkyxktx
+  sg_yt_fn = rbind(cbind(sg11_fn,sg12_fn), cbind(sg21_fn,sg22_fn))
+  
+  
+  if (1 / kappa(ss_0_y_fn) < 1e-14){
+    message("Reciprical of matrix condition is less than 1e-14. Generalized inverse is used.")
+    ss_0_y_inv_fn = ginv(ss_0_y_fn)
+  } else {
+    ss_0_y_inv_fn = solve(ss_0_y_fn)
+  }
+  
+  if (1 / kappa(ss_0_t_fn) < 1e-14){
+    message("Reciprical of matrix condition is less than 1e-14. Generalized inverse is used.")
+    ss_0_t_inv_fn = ginv(ss_0_t_fn)
+  } else {
+    ss_0_t_inv_fn = solve(ss_0_t_fn)
+  }
+  
+  cov_mymt_fn = t(eq) %*% ss_0_y_inv_fn[1:q,] %*% sg_yt_fn %*% t(ss_0_t_inv_fn[1:q,]) %*% eq /
+    (q^2 * n * sqrt(h_y * h_t))
+  
+  var_Y_tilde_fn = var_mY$var_fixedn + t0^2*var_mT$var_fixedn - 2*t0*cov_mymt_fn
+  
+  # Compute Var(Bias_Y_fn)
+  var_bias_mY_fn = var_mY$var_bias_fixedn
+  var_bias_mT_fn = var_mT$var_bias_fixedn
+  
+  # Reconstruct Sigma_YT_fn matrix with p = 2.
+  p = 2
+  sg11_1_fn = phi_mat * mkykt
+  sg12_1_fn = cbind(rowSums(phi_mat)*mkyktx, rowSums(phi_mat)*mkyktx2, rowSums(phi_mat)*mkyktx3)[,1:p]
+  sg21_1_fn = t(cbind(colSums(phi_mat)*mkyxkt, colSums(phi_mat)*mkyx2kt, colSums(phi_mat)*mkyx3kt)[,1:p])
+  sg22_1_fn = sum(phi_mat)*cbind(c(mkyxktx,mkyx2ktx),c(mkyxktx2,mkyx2ktx2))
+  
+  if(q == 1){
+    sg_1_fn = rbind(c(sg11_1_fn, sg12_1_fn), cbind(t(sg21_1_fn), sg22_1_fn))
+  }else{
+    sg_1_fn = rbind(cbind(sg11_1_fn,sg12_1_fn), cbind(sg21_1_fn,sg22_1_fn))
+  }
+  
+  D_1_y_fn = var_mY$D_1_fn
+  D_1_t_fn = var_mT$D_1_fn
+  if (1 / kappa(ss_1_y_fn) < 1e-14){
+    message("Reciprical of matrix condition is less than 1e-14. Generalized inverse is used.")
+    ss_1_y_inv_fn = ginv(ss_1_y_fn)
+  } else {
+    ss_1_y_inv_fn = solve(ss_1_y_fn)
+  }
+  if (1 / kappa(ss_1_t_fn) < 1e-14){
+    message("Reciprical of matrix condition is less than 1e-14. Generalized inverse is used.")
+    ss_1_t_inv_fn = ginv(ss_1_t_fn)
+  } else {
+    ss_1_t_inv_fn = solve(ss_1_t_fn)
+  }
+  cov_bmYbmT_fn = 4 * D_1_y_fn * D_1_t_fn * t(e_2) %*% 
+    (ss_1_y_inv_fn %*% sg_1_fn %*% ss_1_t_inv_fn)[(q+1):(q+p),(q+1):(q+p)] %*% e_2 / 
+    (n * sqrt(h_y * h_t))
+  
+  var_bias_fn = var_bias_mY_fn + t0^2 * var_bias_mT_fn - 2 * t0 * cov_bmYbmT_fn
+  
+  # Compute cov(Y_tilde_fn, Bias)
+  var_cov_Y_fn = var_mY$var_cov_fixedn
+  var_cov_T_fn = var_mT$var_cov_fixedn
+  
+  cov_mYbmT_fn = 2 * D_1_t_fn * 
+    sum((ss_1_y_inv_fn %*% sg_1_fn %*% ss_1_t_inv_fn)[1:q,(q+2)]) / (q * n * sqrt(h_y * h_t))
+  cov_mTbmY_fn = 2 * D_1_y_fn *
+    sum((ss_1_t_inv_fn %*% sg_1_fn %*% ss_1_y_inv_fn)[1:q,(q+2)]) / (q * n * sqrt(h_y * h_t))
+  
+  cov_Y_tilde_bias_fn = var_cov_Y_fn - t0*cov_mYbmT_fn - 
+    t0*cov_mTbmY_fn + t0^2*var_cov_T_fn
+  
+  # The null-restricted version.
+  nr_var_adj_fn = var_Y_tilde_fn + var_bias_fn - 2*cov_Y_tilde_bias_fn
+  nr_var0_fn = var_Y_tilde_fn
+
   return(list(var_my     = var_mY$var, 
               var_mt     = var_mT$var,
               cov_mymt   = cov_mymt,
@@ -221,5 +309,18 @@ boundary_var_fuzzy <- function(dat, t0 = 0, kernID = 0, left = TRUE, maxit = 20,
               cov_bmymt  = cov_mTbmY, 
               cov_bmybmt = cov_bmYbmT,
               nr_var     = nr_var0, 
-              nr_var_adj = nr_var_adj))
+              nr_var_adj = nr_var_adj,
+              var_my_fixedn = var_mY$var_fixedn,
+              var_mt_fixedn = var_mT$var_fixedn,
+              cov_mymt_fixedn = cov_mymt_fn,
+              var_adj_y_fixedn  = var_mY$var_adj_fixedn, 
+              var_adj_t_fixedn  = var_mT$var_adj_fixedn,
+              bias_y_fixedn     = var_mY$bias_fixedn,
+              bias_t_fixedn     = var_mT$bias_fixedn,
+              cov_mybmt_fixedn  = cov_mYbmT_fn, 
+              cov_bmymt_fixedn  = cov_mTbmY_fn, 
+              cov_bmybmt_fixedn = cov_bmYbmT_fn,
+              nr_var_fixedn     = nr_var0_fn, 
+              nr_var_adj_fixedn = nr_var_adj_fn)
+              )
   }

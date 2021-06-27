@@ -77,8 +77,8 @@ kernels kernPtr[] = {kernel_triangular,
 //' @param h A scalar bandwidth.
 //' @param p The polynomial degree.
 //' @param maxit Maximum iteration number in the MM algorithm for quantile
-//'  estimation.
-//' @param tol Convergence criterion in the MM algorithm.
+//'  estimation. Defaults to 100.
+//' @param tol Convergence criterion in the MM algorithm. Defaults to 1e-4.
 //' @export
 //' @return \code{cqrMMcpp} returns a list with the following components:
 //' \item{beta0}{A q by 1 vector of estimates for q quantiles.}
@@ -99,8 +99,8 @@ kernels kernPtr[] = {kernel_triangular,
 //'                tau    = tau,
 //'                h      = 4.0,
 //'                p      = 1,
-//'                maxit  = 10,
-//'                tol    = 1.0e-3)
+//'                maxit  = 100,
+//'                tol    = 1.0e-4)
 //'                
 //' # Estimate of the conditional mean on the boundary
 //' est_mean = mean(est$beta0)
@@ -110,7 +110,7 @@ kernels kernPtr[] = {kernel_triangular,
 // [[Rcpp::export]]
 Rcpp::List cqrMMcpp(double x0, const arma::colvec & x_vec, const arma::colvec & y, int kernID,
                     const arma::colvec & tau, double h, int p, 
-                    int maxit = 20, double tol = 1e-3) {
+                    int maxit = 100, double tol = 1e-4) {
   int n = arma::size(y)(0);
   int q = arma::size(tau)(0);
   int it;
@@ -185,7 +185,7 @@ struct estimate {
 
 estimate cqrMM(double x0, const arma::colvec & x_vec, const arma::colvec & y, int kernID,
                   const arma::colvec & tau, double h, int p, 
-                  int maxit = 500, double tol = 1e-4) {
+                  int maxit = 100, double tol = 1e-4) {
   int n = arma::size(y)(0);
   int q = arma::size(tau)(0);
   int it;
@@ -355,8 +355,8 @@ struct Allest2 : public RcppParallel::Worker {
 //' \code{tau = (1:q)/(q+1)}.
 //' @param h A scalar bandwidth.
 //' @param p The polynomial degree. Defaults to 1.
-//' @param maxit Maximum number of iterations in the MM algorithm. Defaults to 20.
-//' @param tol The convergence criterion. Defaults to 1.0e-3.
+//' @param maxit Maximum number of iterations in the MM algorithm. Defaults to 100.
+//' @param tol The convergence criterion. Defaults to 1.0e-4.
 //' @param parallel Set it to 1 if using parallel computing. Default is 1.
 //' @param grainsize The minimum chunk size for parallelization. Defaults to 1.
 //' @export
@@ -382,7 +382,7 @@ struct Allest2 : public RcppParallel::Worker {
 // [[Rcpp::export]]
 Rcpp::List est_cqr(const arma::colvec & x_vec, const arma::colvec & y, int kernID, 
                    const arma::colvec & tau, double h, int p = 1, 
-                   int maxit = 20, double tol = 1e-3, int parallel = 0, int grainsize = 1) {
+                   int maxit = 100, double tol = 1e-4, int parallel = 0, int grainsize = 1) {
   
   int n = arma::size(y)(0);
   
@@ -437,4 +437,151 @@ Rcpp::List est_cqr(const arma::colvec & x_vec, const arma::colvec & y, int kernI
                               Rcpp::Named("sig_hat") = rmat2( Rcpp::_ , 0),
                               Rcpp::Named("e_hat")   = rmat2( Rcpp::_ , 1));
   }
+}
+
+//' @title Function to compute the local composite quantile regression estimate with covariates
+//' 
+//' @description This function computes the local composite quantile regression 
+//' estimate with covariates. The point of interest can be either interior or boundary. 
+//' 
+//' @param x0 point of interest
+//' @param x_vec a vector of covariates
+//' @param y a vector of dependent variable, the treatment outcome variable 
+//' in the case of regression discontinuity.
+//' @param xcv A matrix of additional covariates to be used in local regression analysis.
+//' It must have the same number of rows as the running variable \code{x}. When calling
+//' the function \code{cqrMMxcv} directly, if there is no additional covariate, set 
+//' xcv as an arbitrary zero matrix, e.g., \code{xcv = matrix(0,2,2)}, as the corresponding
+//' function argument value.
+//' @param kernID kernel ID for different kernels.
+//' \enumerate{
+//'   \item \code{kernID = 0}: triangular kernel.
+//'   \item \code{kernID = 1}: biweight kernel.
+//'   \item \code{kernID = 2}: Epanechnikov kernel. 
+//'   \item \code{kernID = 3}: Gaussian kernel.
+//'   \item \code{kernID = 4}: tricube kernel.
+//'   \item \code{kernID = 5}: triweight kernel. 
+//'   \item \code{kernID = 6}: uniform kernel. 
+//' }
+//' @param tau A vector of quantile positions. They are obtained by 
+//' \code{tau = (1:q)/(q+1)}.
+//' @param h A scalar bandwidth.
+//' @param p The polynomial degree.
+//' @param maxit Maximum iteration number in the MM algorithm for quantile
+//'  estimation.
+//' @param tol Convergence criterion in the MM algorithm.
+//' @export
+//' @return \code{cqrMMxcv} returns a list with the following components:
+//' \item{beta0}{A q by 1 vector of estimates for q quantiles.}
+//' \item{beta1}{A p by 1 vector of estimates for the first p derivatives of
+//' the conditional mean function.}
+//' @examples
+//' # Use the Head Start data as an example.
+//' data(headstart)
+//' data_n = subset(headstart, headstart$poverty < 0)
+//' q      = 5
+//' tau    = (1:q) / (q + 1)
+//' 
+//' # Compute the local composite quantile estimate
+//' est = cqrMMxcv(x0     = 0,
+//'                x_vec  = data_n$poverty,
+//'                y      = data_n$mortality,
+//'                xcv    = matrix(0,2,2),
+//'                kernID = 2,
+//'                tau    = tau,
+//'                h      = 4.0,
+//'                p      = 1,
+//'                maxit  = 10,
+//'                tol    = 1.0e-3)
+//'                
+//' # Estimate of the conditional mean on the boundary
+//' est_mean = mean(est$beta0)
+//' 
+//' # Estimate of the first derivative of the conditional mean function
+//' est_d1   = est$beta1[1]
+// [[Rcpp::export]]
+Rcpp::List cqrMMxcv(double x0, const arma::colvec & x_vec, const arma::colvec & y, 
+                    const arma::mat & xcv, int kernID,
+                    const arma::colvec & tau, double h, int p, 
+                    int maxit = 100, double tol = 1e-4) {
+  int n = arma::size(y)(0);
+  int q = arma::size(tau)(0);
+  int it;
+  double delta, tn, e0, eps, sumw, sig;
+  
+  arma::mat x(n,p);
+  arma::colvec w(n);
+  arma::colvec xd = x_vec - x0;
+  for (int j = 1; j < (p + 1); j++) {
+    x.col(j - 1) = pow(xd,j);
+  }
+  w = kernPtr[kernID].kern(xd/h);
+  if (arma::accu(w != 0) == 1) {
+    Rcpp::stop("There is no data around the point of interest. Increase the bandwidth.");
+  }
+  
+  double sum_xcv = arma::as_scalar(arma::accu(xcv));
+  if (sum_xcv != 0.0) {
+    int p_xcv = arma::size(xcv)(1);
+    p = p + p_xcv;
+  }
+  
+  arma::mat x_mat(n,p+1), y_mat(n,1), p1(p,q), p5;
+  arma::colvec beta(p + 1), res(n), b(p), a(q), c;
+  arma::cube p6(p,p,q);
+  
+  /* d = p;*/
+  if (sum_xcv != 0.0) {
+    x_mat = arma::join_rows(arma::join_rows(arma::ones(n,1),x),xcv) % arma::repmat(arma::sqrt(w), 1, (p+1));
+    x = arma::join_rows(x,xcv);
+  } else {
+    x_mat = arma::join_rows(arma::ones(n,1),x) % arma::repmat(arma::sqrt(w), 1, (p+1));
+  }
+  
+  y_mat = y % sqrt(w);
+  beta  = arma::solve(x_mat, y_mat); 
+  res   = y_mat - x_mat*beta;
+  sig   = sqrt(std::inner_product(res.begin(), res.end(), res.begin(), 0.0)/(n));
+  b     = beta.rows(1,p);
+  for (int j = 1; j <= q; j++) {
+    a(j-1) = beta(0) + R::qnorm5(tau(j - 1), 0.0, sig, 1, 0);
+  }
+  c     = 2*tau - 1;
+  delta = 1;
+  it    = 0;
+  tn    = tol/n;
+  e0    = -tn/log(tn);
+  eps   = (e0-tn)/(1+log(e0));
+  sumw  = arma::as_scalar(arma::accu(w));
+  p5    = trans(w) * x;
+  
+  arma::mat ar, A, p2, p3, p4, tp, denor, numer, aa;
+  arma::colvec a0, b0;
+  while(delta > tol && it < maxit){
+    it++;
+    b0 = b;
+    a0 = a;
+    ar = arma::abs(arma::repmat(y-x*b0,1,q) - arma::repmat(trans(a0),n,1));
+    A  = 1 / (ar + eps);
+    p2 = trans(y % w) * A;
+    p3 = trans(x % arma::repmat(w,1,p)) * A;
+    p4 = trans(w) * A;
+    denor = arma::zeros(p,p);
+    numer = arma::zeros(p,1);
+    for(int k = 0; k < q; k++){
+      tp          = arma::repmat(A.col(k) % w, 1, p) % x;
+      p1.col(k)   = trans(tp) * y;
+      p6.slice(k) = trans(tp) * x;
+      denor      += p6.slice(k) - p3.col(k) * trans(p3.col(k)) / p4(k);
+      numer      += p1.col(k) - p2(k) * p3.col(k) / p4(k) -
+        sumw * c(k) * p3.col(k) / p4(k) + c(k) * trans(p5);
+    }
+    b = arma::solve(denor,numer);
+    a = trans( (trans((y - x * b) % w) * A + sumw * trans(c) ) / p4 );
+    delta = arma::as_scalar(arma::abs( arma::mean(a-a0,0)) + arma::sum(arma::abs(b-b0) ));
+  }
+  
+  return Rcpp::List::create(Rcpp::Named("beta0")     = a,
+                            Rcpp::Named("beta1")     = b,
+                            Rcpp::Named("iteration") = it);
 }

@@ -107,7 +107,7 @@ h_cqr(dat = dat_n, llr.residuals = TRUE)
 \references{
 {
 
-\cite{Huang and Zhan (2020) "Local Composite Quantile Regression for
+\cite{Huang and Zhan (2021) "Local Composite Quantile Regression for
 Regression Discontinuity," working paper.}
 
 }

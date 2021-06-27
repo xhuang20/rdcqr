@@ -11,8 +11,8 @@ est_cqr(
   tau,
   h,
   p = 1L,
-  maxit = 20L,
-  tol = 0.001,
+  maxit = 100L,
+  tol = 1e-04,
   parallel = 0L,
   grainsize = 1L
 )
@@ -41,9 +41,9 @@ in the case of regression discontinuity.}
 
 \item{p}{The polynomial degree. Defaults to 1.}
 
-\item{maxit}{Maximum number of iterations in the MM algorithm. Defaults to 20.}
+\item{maxit}{Maximum number of iterations in the MM algorithm. Defaults to 100.}
 
-\item{tol}{The convergence criterion. Defaults to 1.0e-3.}
+\item{tol}{The convergence criterion. Defaults to 1.0e-4.}
 
 \item{parallel}{Set it to 1 if using parallel computing. Default is 1.}
 

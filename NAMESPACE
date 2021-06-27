@@ -6,4 +6,5 @@ export("boundary_var",
        "cqrMMcpp",
        "est_cqr",
        "h_cqr",
-       "rdcqr")
+       "rdcqr",
+       "cqrMMxcv")

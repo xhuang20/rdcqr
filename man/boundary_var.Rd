@@ -4,8 +4,8 @@
 \alias{boundary_var}
 \title{Variance on the boundary}
 \usage{
-boundary_var(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3,
- para = 1, grainsize = 1, llr.residuals = TRUE)
+boundary_var(dat, kernID = 0, left = TRUE, maxit = 100, tol = 1.0e-4,
+ para = 1, grainsize = 1, llr.residuals = TRUE, ls.derivative = TRUE)
 }
 \arguments{
 \item{dat}{A list with the following components: \describe{ \item{y}{A vector
@@ -31,9 +31,9 @@ triweight kernel. \item \code{kernID = 6}:  uniform kernel. }}
 the left of (below) the cutoff. Defaults to \code{TRUE}.}
 
 \item{maxit}{Maximum iteration number in the MM algorithm for quantile
-estimation. Defaults to 20.}
+estimation. Defaults to 100.}
 
-\item{tol}{Convergence criterion in the MM algorithm. Defaults to 1.0e-3.}
+\item{tol}{Convergence criterion in the MM algorithm. Defaults to 1.0e-4.}
 
 \item{para}{A 0/1 variable specifying whether to use parallel computing.
 Defaults to 1.}
@@ -50,19 +50,25 @@ and adjusted asymptotic standard errors and the bandwidths. This option
 will improve the speed. One can use this opition to get a quick estimate of
 the standard errors when the sample size is large. To use residuals from
 the LCQR method, set \code{llr.residuals = FALSE}.}
+
+\item{ls.derivative}{Whether to use a global quartic and quintic polynomial to
+estimate the second and third derivatives of the conditional mean function.
+Defaults to \code{TRUE}.}
 }
 \value{
 \code{boundary_var} returns a list with the following components:
 \item{var}{Estimated variance on the boundary.} \item{var_adj}{Adjusted
 variance estimate on the boundary.} \item{e_hat}{Residuals adjusted by the
 estimated standard deviations.} \item{ss_0}{The S matrix in Huang and Zhan
-(2020) when the degree of the polynomial in estimation is equal to 1.}
-\item{ss_1}{The S matrix in Huang and Zhan (2020) when the degree of the
+(2021) when the degree of the polynomial in estimation is equal to 1.}
+\item{ss_1}{The S matrix in Huang and Zhan (2021) when the degree of the
 polynomial in estimation is equal to 2.} \item{sig0_hat}{Estimated
 conditional standard deviation at the cutoff 0.} \item{var_bias}{Estimated
 variance of the bias.} \item{var_cov}{Estimated covariance between the
 conditional mean and its bias.} \item{ac}{The constant in the bias
-expression.}
+expression.} \item{bias_fixedn}{The bias based on fixed-n approximation.}
+There are also several returned values with suffix "fixedn", which are the
+counterparts of the above values based on the fixed-n approximation.
 }
 \description{
 This function computes variance and adjusted variance on the
@@ -96,14 +102,14 @@ dat_p = list("x"      = data_p$poverty,
              "fd1"    = fd1)
 
 # Use the residuals from local linear regression for a quick try.
-boundary_var(dat = dat_p, left = FALSE, llr.residuals = TRUE)
+boundary_var(dat = dat_p, left = FALSE, llr.residuals = TRUE, ls.derivative = TRUE)
 }
 
 }
 \references{
 {
 
-\cite{Huang and Zhan (2020) "Local Composite Quantile Regression for
+\cite{Huang and Zhan (2021) "Local Composite Quantile Regression for
 Regression Discontinuity," working paper.}
 
 }

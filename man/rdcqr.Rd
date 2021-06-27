@@ -5,9 +5,9 @@
 \title{Local composite quantile estimation in regression discontinuity}
 \usage{
 rdcqr(y, x, fuzzy = NULL, t0 = 0, cutoff = 0, q = 5, bandwidth =
-  "rot", kernel.type = "triangular", maxit = 20, tol = 1.0e-3, parallel =
+  "rot", kernel.type = "triangular", maxit = 100, tol = 1.0e-4, parallel =
   TRUE, numThreads = "default", grainsize = 1, llr.residuals = TRUE,
-  ls.derivative = TRUE)
+  ls.derivative = TRUE, fixed.n = FALSE)
 }
 \arguments{
 \item{y}{A vector of treatment outcomes.}
@@ -49,9 +49,9 @@ kernel. \code{kernID = 5}. \item \code{uniform}:  uniform kernel
 \code{kernID = 6}. }}
 
 \item{maxit}{Maximum iteration number in the MM algorithm for quantile
-estimation. Defaults to 20.}
+estimation. Defaults to 100.}
 
-\item{tol}{Convergence criterion in the MM algorithm. Defaults to 1.0e-3.}
+\item{tol}{Convergence criterion in the MM algorithm. Defaults to 1.0e-4.}
 
 \item{parallel}{A logical value specifying whether to use parallel computing.
 Defaults to  \code{TRUE}.}
@@ -76,6 +76,11 @@ residuals from the LCQR method, set \code{llr.residuals = FALSE}.}
 \item{ls.derivative}{Whether to use a global quartic and quintic polynomial
 to estimate the second and third derivatives of the conditional mean
 function. Defaults to \code{TRUE}.}
+
+\item{fixed.n}{Whether to compute the fixed-n results instead of asymptotic
+results. If this option is turned on, all bias-correction and standard error
+calculation are based on the fixed-n (nonasymptotic) approach. Defaults to
+\code{FALSE}.}
 }
 \value{
 \code{rdcqr} returns a list with the following components:

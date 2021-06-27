@@ -45,10 +45,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cqrMMxcv
+Rcpp::List cqrMMxcv(double x0, const arma::colvec& x_vec, const arma::colvec& y, const arma::mat& xcv, int kernID, const arma::colvec& tau, double h, int p, int maxit, double tol);
+RcppExport SEXP _rdcqr_cqrMMxcv(SEXP x0SEXP, SEXP x_vecSEXP, SEXP ySEXP, SEXP xcvSEXP, SEXP kernIDSEXP, SEXP tauSEXP, SEXP hSEXP, SEXP pSEXP, SEXP maxitSEXP, SEXP tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type x_vec(x_vecSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type xcv(xcvSEXP);
+    Rcpp::traits::input_parameter< int >::type kernID(kernIDSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(cqrMMxcv(x0, x_vec, y, xcv, kernID, tau, h, p, maxit, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rdcqr_cqrMMcpp", (DL_FUNC) &_rdcqr_cqrMMcpp, 9},
     {"_rdcqr_est_cqr", (DL_FUNC) &_rdcqr_est_cqr, 10},
+    {"_rdcqr_cqrMMxcv", (DL_FUNC) &_rdcqr_cqrMMxcv, 10},
     {NULL, NULL, 0}
 };
 

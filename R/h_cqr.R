@@ -92,7 +92,7 @@
 #'
 #'@references{
 #'
-#'\cite{Huang and Zhan (2020) "Local Composite Quantile Regression for
+#'\cite{Huang and Zhan (2021) "Local Composite Quantile Regression for
 #'Regression Discontinuity," working paper.}
 #'
 #'}
@@ -229,9 +229,8 @@ h_cqr <- function(dat, kernID = 0, left = TRUE, maxit = 20, tol = 1.0e-3, para =
   if(q == 1){
     s11_1 = diag(f_e) * mu0
   }else{
-    s11_1  = diag(c(f_e))*mu0
+    s11_1  = diag(c(f_e)) * mu0
   }
-  #s11_1  = diag(c(f_e))*mu0
   s12_1  = cbind(f_e*mu1,f_e*mu2,f_e*mu3)[,1:p]
   s21_1  = t(s12_1)
   mu_vec = c(mu1,mu2,mu3,mu4,mu5,mu6)

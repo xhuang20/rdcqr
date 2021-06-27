@@ -1,7 +1,7 @@
 Package: rdcqr
 Type: Package
 Title: Local Composite Quantile Regression Method for Regression Discontinuity
-Version: 0.0.1
+Version: 0.1.0
 Date: 2020-08-31
 Author: Xiao Huang
 Maintainer: Xiao Huang <xiao_huang@outlook.com>
@@ -10,7 +10,7 @@ Description: This package computes local composite quantile regression estimator
     designs. It also computes the bias-corrected estimator and adjusts its 
     standard error by taking into consideration the variability due to bias
     correction.
-License: GPL-2.0
+License: GPL-2
 Depends: R (>= 2.10)
 Imports: ks (>= 1.11.7), locfit (>= 1.5-9.1), Rcpp (>= 1.0.2), RcppParallel (>= 5.0.2)
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel

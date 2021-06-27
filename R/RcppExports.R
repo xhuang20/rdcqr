@@ -25,8 +25,8 @@
 #' @param h A scalar bandwidth.
 #' @param p The polynomial degree.
 #' @param maxit Maximum iteration number in the MM algorithm for quantile
-#'  estimation.
-#' @param tol Convergence criterion in the MM algorithm.
+#'  estimation. Defaults to 100.
+#' @param tol Convergence criterion in the MM algorithm. Defaults to 1e-4.
 #' @export
 #' @return \code{cqrMMcpp} returns a list with the following components:
 #' \item{beta0}{A q by 1 vector of estimates for q quantiles.}
@@ -47,15 +47,15 @@
 #'                tau    = tau,
 #'                h      = 4.0,
 #'                p      = 1,
-#'                maxit  = 10,
-#'                tol    = 1.0e-3)
+#'                maxit  = 100,
+#'                tol    = 1.0e-4)
 #'                
 #' # Estimate of the conditional mean on the boundary
 #' est_mean = mean(est$beta0)
 #' 
 #' # Estimate of the first derivative of the conditional mean function
 #' est_d1   = est$beta1[1]
-cqrMMcpp <- function(x0, x_vec, y, kernID, tau, h, p, maxit = 20L, tol = 1e-3) {
+cqrMMcpp <- function(x0, x_vec, y, kernID, tau, h, p, maxit = 100L, tol = 1e-4) {
     .Call(`_rdcqr_cqrMMcpp`, x0, x_vec, y, kernID, tau, h, p, maxit, tol)
 }
 
@@ -81,8 +81,8 @@ cqrMMcpp <- function(x0, x_vec, y, kernID, tau, h, p, maxit = 20L, tol = 1e-3) {
 #' \code{tau = (1:q)/(q+1)}.
 #' @param h A scalar bandwidth.
 #' @param p The polynomial degree. Defaults to 1.
-#' @param maxit Maximum number of iterations in the MM algorithm. Defaults to 20.
-#' @param tol The convergence criterion. Defaults to 1.0e-3.
+#' @param maxit Maximum number of iterations in the MM algorithm. Defaults to 100.
+#' @param tol The convergence criterion. Defaults to 1.0e-4.
 #' @param parallel Set it to 1 if using parallel computing. Default is 1.
 #' @param grainsize The minimum chunk size for parallelization. Defaults to 1.
 #' @export
@@ -105,7 +105,71 @@ cqrMMcpp <- function(x0, x_vec, y, kernID, tau, h, p, maxit = 20L, tol = 1e-3) {
 #'         tau    = tau,
 #'         h      = 4.0,
 #'         p      = 1) 
-est_cqr <- function(x_vec, y, kernID, tau, h, p = 1L, maxit = 20L, tol = 1e-3, parallel = 0L, grainsize = 1L) {
+est_cqr <- function(x_vec, y, kernID, tau, h, p = 1L, maxit = 100L, tol = 1e-4, parallel = 0L, grainsize = 1L) {
     .Call(`_rdcqr_est_cqr`, x_vec, y, kernID, tau, h, p, maxit, tol, parallel, grainsize)
+}
+
+#' @title Function to compute the local composite quantile regression estimate with covariates
+#' 
+#' @description This function computes the local composite quantile regression 
+#' estimate with covariates. The point of interest can be either interior or boundary. 
+#' 
+#' @param x0 point of interest
+#' @param x_vec a vector of covariates
+#' @param y a vector of dependent variable, the treatment outcome variable 
+#' in the case of regression discontinuity.
+#' @param xcv A matrix of additional covariates to be used in local regression analysis.
+#' It must have the same number of rows as the running variable \code{x}. When calling
+#' the function \code{cqrMMxcv} directly, if there is no additional covariate, set 
+#' xcv as an arbitrary zero matrix, e.g., \code{xcv = matrix(0,2,2)}, as the corresponding
+#' function argument value.
+#' @param kernID kernel ID for different kernels.
+#' \enumerate{
+#'   \item \code{kernID = 0}: triangular kernel.
+#'   \item \code{kernID = 1}: biweight kernel.
+#'   \item \code{kernID = 2}: Epanechnikov kernel. 
+#'   \item \code{kernID = 3}: Gaussian kernel.
+#'   \item \code{kernID = 4}: tricube kernel.
+#'   \item \code{kernID = 5}: triweight kernel. 
+#'   \item \code{kernID = 6}: uniform kernel. 
+#' }
+#' @param tau A vector of quantile positions. They are obtained by 
+#' \code{tau = (1:q)/(q+1)}.
+#' @param h A scalar bandwidth.
+#' @param p The polynomial degree.
+#' @param maxit Maximum iteration number in the MM algorithm for quantile
+#'  estimation.
+#' @param tol Convergence criterion in the MM algorithm.
+#' @export
+#' @return \code{cqrMMxcv} returns a list with the following components:
+#' \item{beta0}{A q by 1 vector of estimates for q quantiles.}
+#' \item{beta1}{A p by 1 vector of estimates for the first p derivatives of
+#' the conditional mean function.}
+#' @examples
+#' # Use the Head Start data as an example.
+#' data(headstart)
+#' data_n = subset(headstart, headstart$poverty < 0)
+#' q      = 5
+#' tau    = (1:q) / (q + 1)
+#' 
+#' # Compute the local composite quantile estimate
+#' est = cqrMMxcv(x0     = 0,
+#'                x_vec  = data_n$poverty,
+#'                y      = data_n$mortality,
+#'                xcv    = matrix(0,2,2),
+#'                kernID = 2,
+#'                tau    = tau,
+#'                h      = 4.0,
+#'                p      = 1,
+#'                maxit  = 10,
+#'                tol    = 1.0e-3)
+#'                
+#' # Estimate of the conditional mean on the boundary
+#' est_mean = mean(est$beta0)
+#' 
+#' # Estimate of the first derivative of the conditional mean function
+#' est_d1   = est$beta1[1]
+cqrMMxcv <- function(x0, x_vec, y, xcv, kernID, tau, h, p, maxit = 100L, tol = 1e-4) {
+    .Call(`_rdcqr_cqrMMxcv`, x0, x_vec, y, xcv, kernID, tau, h, p, maxit, tol)
 }
 
